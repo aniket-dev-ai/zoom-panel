@@ -11,6 +11,16 @@ export function ZoomForm({ value, onChange }: ZoomFormProps) {
   return (
     <section className="space-y-3">
       <div className="space-y-1">
+        <Label htmlFor="link">Meeting link</Label>
+        <Input
+          id="link"
+          type="url"
+          value={value.link ?? ""}
+          onChange={(e) => onChange({ ...value, link: e.target.value })}
+          placeholder="Paste the meeting join URL"
+        />
+      </div>
+      <div className="space-y-1">
         <Label htmlFor="title">Meeting title</Label>
         <Input
           id="title"

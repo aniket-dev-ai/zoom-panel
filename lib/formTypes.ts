@@ -10,4 +10,5 @@ export type ZoomFormState = {
   date: string; // yyyy-mm-dd
   time: string; // hh:mm
   duration: number; // minutes
+  link?: string; // meeting join link
 };

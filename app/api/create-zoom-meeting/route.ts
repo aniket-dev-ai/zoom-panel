@@ -1,6 +1,7 @@
 // app/api/create-zoom-meeting/route.ts
 import { NextResponse } from "next/server";
-import { getZoomAccessToken } from "@/lib/zoom";
+import { sendMail } from "@/lib/mailer";
+import { reminderEmailHtml } from "@/lib/templates";
 
 type RequestBody = {
   emails: string[];
@@ -8,6 +9,7 @@ type RequestBody = {
   date: string;   // yyyy-mm-dd
   time: string;   // hh:mm
   duration: number;
+  link: string;   // meeting join link
 };
 
 // simple helper
@@ -36,54 +38,56 @@ export async function POST(req: Request) {
       );
     }
 
-    const accessToken = await getZoomAccessToken();
-
-    const startTimeIso = buildIso(body.date, body.time);
-
-    const zoomUserId = process.env.ZOOM_DEFAULT_USER_ID ?? "me";
-
-    const res = await fetch(
-      `https://api.zoom.us/v2/users/${encodeURIComponent(
-        zoomUserId
-      )}/meetings`,
-      {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          topic: body.title || "Meeting",
-          type: 2, // scheduled meeting
-          start_time: startTimeIso,
-          duration: body.duration || 30,
-          timezone: "Asia/Kolkata",
-          settings: {
-            join_before_host: false,
-            waiting_room: true,
-            approval_type: 2,
-          },
-        }),
-      }
-    );
-
-    if (!res.ok) {
-      const text = await res.text();
-      console.error("Zoom create meeting error:", text);
+    if (!body.link?.trim()) {
       return NextResponse.json(
-        { error: "Zoom API error", details: text },
-        { status: 500 }
+        { error: "Missing meeting link" },
+        { status: 400 }
       );
     }
 
-    const data = await res.json();
+    const startTimeIso = buildIso(body.date, body.time);
+    const startAt = new Date(startTimeIso).getTime();
+    const now = Date.now();
 
-    // You can also email data.join_url + data.start_url to recipients here
+    const offsets = [40, 30, 20, 1]; // minutes before start
+
+    const schedules = offsets.map((min) => {
+      const sendAtMs = startAt - min * 60_000;
+      const delay = Math.max(0, sendAtMs - now);
+      // schedule the email using a timer
+      setTimeout(async () => {
+        try {
+          const subject = `Reminder: ${body.title || "Meeting"} in ${min} minute${min === 1 ? "" : "s"}`;
+          const text = `Your meeting starts in ${min} minute${min === 1 ? "" : "s"}.
+Join link: ${body.link}
+Start time: ${new Date(startAt).toLocaleString("en-IN", { timeZone: "Asia/Kolkata" })}`;
+          const html = reminderEmailHtml({
+            title: body.title || "Meeting",
+            link: body.link,
+            minutes: min,
+            startAt,
+            timezone: "Asia/Kolkata",
+          });
+
+          await Promise.all(
+            body.emails.map((email) =>
+              sendMail({ to: [email], subject, text, html }).catch((err) => {
+                console.error("Reminder send failed:", email, err);
+              })
+            )
+          );
+        } catch (err) {
+          console.error("Reminder timer error:", err);
+        }
+      }, delay);
+
+      return { offsetMinutes: min, sendAt: new Date(sendAtMs).toISOString() };
+    });
+
     return NextResponse.json(
       {
-        id: data.id,
-        join_url: data.join_url,
-        start_url: data.start_url,
+        success: true,
+        scheduled: schedules,
       },
       { status: 200 }
     );

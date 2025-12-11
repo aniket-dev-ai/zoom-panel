@@ -31,6 +31,7 @@ export default function HomePage() {
     date: "",
     time: "",
     duration: 30,
+    link: "",
   });
 
   const toggleContact = (id: string) => {
@@ -89,6 +90,7 @@ export default function HomePage() {
             date: zoomForm.date,
             time: zoomForm.time,
             duration: zoomForm.duration,
+            link: zoomForm.link,
           }),
         });
 
@@ -96,11 +98,11 @@ export default function HomePage() {
 
         const data = await res.json();
 
-        toast.success("Zoom meeting created", {
-          description: `Join link: ${data.join_url ?? "check console"}`,
+        toast.success("Reminders scheduled", {
+          description: `${data.scheduled?.length ?? 0} emails will be sent before start.`,
         });
 
-        console.log("Zoom meeting", data);
+        console.log("Reminder schedule", data);
       }
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
@@ -140,10 +142,10 @@ export default function HomePage() {
           {submitting ? (
             <span className="flex items-center gap-2">
               <Spinner className="h-4 w-4" />
-              {mode === "email" ? "Sending..." : "Creating..."}
+              {mode === "email" ? "Sending..." : "Scheduling..."}
             </span>
           ) : (
-            mode === "email" ? "Send Email" : "Create Zoom Meeting"
+            mode === "email" ? "Send Email" : "Schedule Reminders"
           )}
         </Button>
 
