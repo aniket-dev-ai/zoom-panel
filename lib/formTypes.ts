@@ -1,7 +1,8 @@
 // lib/formTypes.ts
 export type EmailFormState = {
   subject: string;
-  body: string;
+  body: string;      // plain text version (for editing + preview)
+  html?: string;     // rich HTML version for sending
 };
 
 export type ZoomFormState = {

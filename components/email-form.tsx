@@ -39,16 +39,22 @@ export function EmailForm({ value, onChange }: EmailFormProps) {
         throw new Error(data.error || "Failed to generate draft");
       }
 
-      const data = (await res.json()) as { subject: string; body: string };
+      const data = (await res.json()) as {
+        subject: string;
+        bodyText: string;
+        bodyHtml: string;
+      };
 
       onChange({
         subject: data.subject,
-        body: data.body,
+        body: data.bodyText,
+        html: data.bodyHtml,
       });
 
       toast.success("Draft generated", {
-        description: "You can edit subject & body before sending.",
+        description: "HTML email ready. You can edit text preview below.",
       });
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
       console.error(err);
       toast.error("Could not generate email", {
@@ -73,7 +79,7 @@ export function EmailForm({ value, onChange }: EmailFormProps) {
       </div>
 
       <div className="space-y-1">
-        <Label htmlFor="body">Message</Label>
+        <Label htmlFor="body">Message (plain text preview)</Label>
         <Textarea
           id="body"
           rows={5}
@@ -81,6 +87,10 @@ export function EmailForm({ value, onChange }: EmailFormProps) {
           onChange={(e) => onChange({ ...value, body: e.target.value })}
           placeholder="Write your email here..."
         />
+        <p className="text-[11px] text-muted-foreground">
+          AI generates a rich HTML email. This text is just a preview /
+          fallback. Actual email uses the HTML version.
+        </p>
       </div>
 
       {/* AI helper */}
@@ -98,7 +108,7 @@ export function EmailForm({ value, onChange }: EmailFormProps) {
           </Button>
         </div>
         <p className="text-xs text-muted-foreground">
-          Type in Hindi/English mix bhi chalega, model samajh lega.
+          Hindi + English mix bhi chalega.
         </p>
       </div>
     </section>

@@ -1,34 +1,72 @@
+// app/api/send-email/route.ts
 import { NextResponse } from "next/server";
 import { sendMail } from "@/lib/mailer";
 
 type RequestBody = {
   emails: string[];
   subject: string;
-  body?: string; // plain text body with \n line breaks
+  body: string;   // plain text
+  html?: string;  // optional rich HTML
 };
 
 export async function POST(req: Request) {
   try {
     const body = (await req.json()) as RequestBody;
 
-    if (!Array.isArray(body.emails) || body.emails.length === 0) {
-      return NextResponse.json({ error: "No recipients provided" }, { status: 400 });
-    }
-    if (!body.subject?.trim()) {
-      return NextResponse.json({ error: "Subject is required" }, { status: 400 });
+    if (!body.emails?.length) {
+      return NextResponse.json(
+        { error: "No recipients provided" },
+        { status: 400 }
+      );
     }
 
-    const info = await sendMail({
-      to: body.emails,
-      subject: body.subject,
-      text: body.body ?? "",
-    });
+    if (!body.subject || !body.body) {
+      return NextResponse.json(
+        { error: "Subject and body are required" },
+        { status: 400 }
+      );
+    }
 
-    return NextResponse.json({ ok: true, messageId: info.messageId }, { status: 200 });
-  } catch (err: any) {
-    console.error("send-email route error:", err);
+    const results = await Promise.all(
+      body.emails.map((email) =>
+        sendMail({
+          to: [email],
+          subject: body.subject,
+          text: body.body,
+          html: body.html, // 👈 if AI ne HTML diya, yahi jayega
+        }).then(
+          () => ({ email, success: true }),
+          (err) => ({ email, success: false, error: err.message })
+        )
+      )
+    );
+
+    const failed = results.filter((r) => !r.success);
+
+    if (failed.length > 0) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: "Some emails failed",
+          results,
+        },
+        { status: 207 }
+      );
+    }
+
     return NextResponse.json(
-      { error: err.message ?? "Failed to send email" },
+      {
+        success: true,
+        message: "All emails sent",
+        results,
+      },
+      { status: 200 }
+    );
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  } catch (err: any) {
+    console.error("send-email error:", err);
+    return NextResponse.json(
+      { error: err.message ?? "Internal error" },
       { status: 500 }
     );
   }
