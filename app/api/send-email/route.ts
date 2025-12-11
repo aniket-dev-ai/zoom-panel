@@ -1,60 +1,34 @@
-// app/api/send-email/route.ts
 import { NextResponse } from "next/server";
 import { sendMail } from "@/lib/mailer";
 
 type RequestBody = {
   emails: string[];
   subject: string;
-  body: string;
+  body?: string; // plain text body with \n line breaks
 };
 
 export async function POST(req: Request) {
   try {
     const body = (await req.json()) as RequestBody;
 
-    if (!body.emails?.length) {
-      return NextResponse.json(
-        { error: "No recipients provided" },
-        { status: 400 }
-      );
+    if (!Array.isArray(body.emails) || body.emails.length === 0) {
+      return NextResponse.json({ error: "No recipients provided" }, { status: 400 });
     }
-
-    if (!body.subject || !body.body) {
-      return NextResponse.json(
-        { error: "Subject and body are required" },
-        { status: 400 }
-      );
+    if (!body.subject?.trim()) {
+      return NextResponse.json({ error: "Subject is required" }, { status: 400 });
     }
-
-    // simple text + minimal HTML
-    const text = body.body;
-    const html = `
-      <div>
-        <p>${body.body.replace(/\n/g, "<br />")}</p>
-      </div>
-    `;
 
     const info = await sendMail({
       to: body.emails,
       subject: body.subject,
-      text,
-      html,
+      text: body.body ?? "",
     });
 
-    return NextResponse.json(
-      {
-        success: true,
-        messageId: info.messageId,
-        accepted: info.accepted,
-        rejected: info.rejected,
-      },
-      { status: 200 }
-    );
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    return NextResponse.json({ ok: true, messageId: info.messageId }, { status: 200 });
   } catch (err: any) {
-    console.error("send-email error:", err);
+    console.error("send-email route error:", err);
     return NextResponse.json(
-      { error: err.message ?? "Internal error" },
+      { error: err.message ?? "Failed to send email" },
       { status: 500 }
     );
   }
