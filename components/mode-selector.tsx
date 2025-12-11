@@ -1,6 +1,7 @@
 import type { ActionMode } from "@/lib/types";
 import { Label } from "@/components/ui/label";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Mail, Timer } from "lucide-react";
 
 type ModeSelectorProps = {
   mode: ActionMode;
@@ -11,20 +12,18 @@ export function ModeSelector({ mode, onChange }: ModeSelectorProps) {
   return (
     <section className="space-y-2">
       <Label>Action</Label>
-      <RadioGroup
-        value={mode}
-        onValueChange={(val) => onChange(val as ActionMode)}
-        className="flex gap-4"
-      >
-        <div className="flex items-center space-x-2">
-          <RadioGroupItem value="email" id="mode-email" />
-          <Label htmlFor="mode-email">Send Email</Label>
-        </div>
-        <div className="flex items-center space-x-2">
-          <RadioGroupItem value="zoom" id="mode-zoom" />
-          <Label htmlFor="mode-zoom">Create Zoom Meeting</Label>
-        </div>
-      </RadioGroup>
+      <Tabs value={mode} onValueChange={(val) => onChange(val as ActionMode)}>
+        <TabsList>
+          <TabsTrigger value="email">
+            <Mail />
+            Send Email
+          </TabsTrigger>
+          <TabsTrigger value="zoom">
+            <Timer />
+            Schedule Reminders
+          </TabsTrigger>
+        </TabsList>
+      </Tabs>
     </section>
   );
 }

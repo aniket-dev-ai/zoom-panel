@@ -38,7 +38,7 @@ export function RecipientsSection({
             />
             <div>
               <div className="font-medium">{c.name}</div>
-              <div className="text-xs text-muted-foreground">{c.email}</div>
+              {/* <div className="text-xs text-muted-foreground">{c.email}</div> */}
             </div>
           </label>
         ))}

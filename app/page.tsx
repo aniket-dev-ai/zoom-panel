@@ -5,9 +5,10 @@ import { CONTACTS } from "@/lib/contacts";
 import type { ActionMode } from "@/lib/types";
 import type { EmailFormState, ZoomFormState } from "@/lib/formTypes";
 
-import { Card } from "@/components/ui/card";
+import { Card, CardHeader, CardTitle, CardDescription, CardContent  } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
+import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 
 import { RecipientsSection } from "@/components/recipients-section";
@@ -15,6 +16,7 @@ import { ModeSelector } from "@/components/mode-selector";
 import { EmailForm } from "@/components/email-form";
 import { ZoomForm } from "@/components/zoom-form";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { Send, AlarmClock } from "lucide-react";
 
 export default function HomePage() {
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
@@ -116,45 +118,75 @@ export default function HomePage() {
   };
 
   return (
-    <main className="min-h-screen bg-background flex items-center justify-center p-4">
-      <Card className="w-full max-w-3xl p-6 space-y-6">
-        <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-bold">Quick Mail &amp; Zoom Panel</h1>
-          <ThemeToggle />
+    <main className="min-h-screen app-bg grid-overlay p-6">
+      <div className="mx-auto max-w-6xl h-[85vh] grid grid-rows-[auto_1fr_auto] gap-4">
+        {/* Top brand bar */}
+        <div className="glass-panel rounded-2xl border px-6 py-4 flex items-center justify-between">
+          <div>
+            <div className="text-xl font-semibold brand-gradient">Quick Mail &amp; Zoom Panel</div>
+            <div className="text-sm text-muted-foreground">Luxury, fast and polished actions</div>
+          </div>
+          <div className="flex items-center gap-2">
+            <Badge variant="secondary">Selected: {selectedEmails.length}</Badge>
+            <ThemeToggle />
+          </div>
         </div>
 
-        <RecipientsSection
-          contacts={CONTACTS}
-          selectedIds={selectedIds}
-          onToggle={toggleContact}
-          onSelectAll={selectAll}
-        />
+        {/* Split panels */}
+        <div className="grid md:grid-cols-2 gap-4 overflow-hidden">
+          <Card className="glass-panel h-full overflow-auto">
+            <CardHeader>
+              <CardTitle className="text-lg">Recipients</CardTitle>
+              <CardDescription>Select who should receive the message</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <RecipientsSection
+                contacts={CONTACTS}
+                selectedIds={selectedIds}
+                onToggle={toggleContact}
+                onSelectAll={selectAll}
+              />
+            </CardContent>
+          </Card>
 
-        <ModeSelector mode={mode} onChange={setMode} />
+          <Card className="glass-panel h-full overflow-auto">
+            <CardHeader>
+              <CardTitle className="text-lg">Action</CardTitle>
+              <CardDescription>Compose an email or schedule reminders</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <ModeSelector mode={mode} onChange={setMode} />
+              {mode === "email" ? (
+                <EmailForm value={emailForm} onChange={setEmailForm} />
+              ) : (
+                <ZoomForm value={zoomForm} onChange={setZoomForm} />
+              )}
+            </CardContent>
+          </Card>
+        </div>
 
-        {mode === "email" ? (
-          <EmailForm value={emailForm} onChange={setEmailForm} />
-        ) : (
-          <ZoomForm value={zoomForm} onChange={setZoomForm} />
-        )}
-
-        <Button onClick={handleSubmit} disabled={submitting} aria-busy={submitting} className="min-w-40">
-          {submitting ? (
-            <span className="flex items-center gap-2">
-              <Spinner className="h-4 w-4" />
-              {mode === "email" ? "Sending..." : "Scheduling..."}
-            </span>
-          ) : (
-            mode === "email" ? "Send Email" : "Schedule Reminders"
-          )}
-        </Button>
-
-        {selectedEmails.length > 0 && (
-          <p className="text-xs text-muted-foreground">
-            Will target: {selectedEmails.join(", ")}
-          </p>
-        )}
-      </Card>
+        {/* Bottom sticky CTA */}
+        <div className="flex items-center justify-end">
+          <Button
+            onClick={handleSubmit}
+            disabled={submitting}
+            aria-busy={submitting}
+            className="min-w-48 cta-gradient text-primary-foreground hover:opacity-95"
+          >
+            {submitting ? (
+              <span className="flex items-center gap-2">
+                <Spinner className="h-4 w-4" />
+                {mode === "email" ? "Sending..." : "Scheduling..."}
+              </span>
+            ) : (
+              <span className="flex items-center gap-2">
+                {mode === "email" ? <Send className="size-4" /> : <AlarmClock className="size-4" />}
+                {mode === "email" ? "Send Email" : "Schedule Reminders"}
+              </span>
+            )}
+          </Button>
+        </div>
+      </div>
     </main>
   );
 }

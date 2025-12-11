@@ -120,3 +120,59 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* Enhanced app background utilities */
+@layer utilities {
+  .app-bg {
+    background-image:
+      radial-gradient(800px 400px at 80% -100px, oklch(0.97 0 0) 0%, transparent 60%),
+      radial-gradient(600px 300px at 10% -120px, oklch(0.98 0 0) 0%, transparent 60%);
+  }
+
+  .dark .app-bg {
+    background-image:
+      radial-gradient(800px 400px at 80% -100px, oklch(0.22 0.02 260) 0%, transparent 60%),
+      radial-gradient(600px 300px at 10% -120px, oklch(0.24 0.02 320) 0%, transparent 60%);
+  }
+
+  .grid-overlay::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    background-image: radial-gradient(currentColor 1px, transparent 1px);
+    background-size: 24px 24px;
+    color: oklch(0.92 0 0 / 0.5);
+    mask-image: linear-gradient(to bottom, transparent, black 20%, black 80%, transparent);
+  }
+
+  .dark .grid-overlay::before {
+    color: oklch(0.2 0 0 / 0.3);
+  }
+
+  /* Glass panel utility for luxury UI */
+  .glass-panel {
+    background-color: oklch(1 0 0 / 0.55);
+    border-color: oklch(0.92 0 0 / 0.6);
+    backdrop-filter: blur(14px) saturate(1.2);
+    box-shadow: 0 10px 30px oklch(0.2 0 0 / 0.12);
+  }
+  .dark .glass-panel {
+    background-color: oklch(0.2 0 0 / 0.5);
+    border-color: oklch(1 0 0 / 0.08);
+    box-shadow: 0 10px 30px oklch(0.1 0 0 / 0.35);
+  }
+
+  /* Gradient brand text */
+  .brand-gradient {
+    background-image: linear-gradient(90deg, oklch(0.65 0.22 264), oklch(0.7 0.18 20));
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
+  /* Premium call-to-action button skin */
+  .cta-gradient {
+    background-image: linear-gradient(135deg, oklch(0.62 0.18 264), oklch(0.68 0.19 70));
+  }
+}
